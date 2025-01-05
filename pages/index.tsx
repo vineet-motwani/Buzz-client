@@ -9,6 +9,8 @@ import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 import { graphqlClient } from "@/clients/api";
 import { verifyUserGoogleTokenQuery } from "@/graphql/query/user";
+import { useCurrentUser } from "@/hooks/user";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BuzzSidebarButton {
   title: string;
@@ -52,6 +54,9 @@ const sideBarMenuItems: BuzzSidebarButton[] = [
 
 export default function Home() {
 
+  const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
+
   const handleLoginWithGoogle = useCallback(
     async (cred: CredentialResponse)=>{
       const googleToken = cred.credential
@@ -61,16 +66,19 @@ export default function Home() {
       
       const { verifyGoogleToken } = await graphqlClient.request(verifyUserGoogleTokenQuery, {token: googleToken});
       toast.success(`Verified Success`);
-      console.log(verifyGoogleToken);
+      // console.log(verifyGoogleToken);
 
       if(verifyGoogleToken)
         window.localStorage.setItem("__buzz_token", verifyGoogleToken);
-  }, []);
+      await queryClient.invalidateQueries({ queryKey: ["current-user"] });
+    }, 
+    [queryClient]
+  );
   
   return ( 
     <div>
         <div className="grid grid-cols-12 h-screen w-screen px-40">
-          <div className="col-span-3 pt-1 ml-10">
+          <div className="col-span-3 pt-1 ml-10 relative">
             <div className="text-4xl h-fit w-fit hover:bg-gray-600 rounded-full p-3 cursor-pointer transition-all">
               <SiBuzzfeed/>
             </div>
@@ -89,6 +97,12 @@ export default function Home() {
                 </button>
               </div>
             </div>
+            {user && (
+              <div className="absolute bottom-5 flex gap-2 items-center bg-slate-800 px-3 py-2 rounded-full">
+                {user && user.profileImageURL && <Image src={user?.profileImageURL} width={50} height={50} className="rounded-full" alt="user-image"/>}
+                <h3 className="text-xl">{user.firstName} {user.lastName}</h3>
+              </div>
+            )}
           </div>
           <div className="col-span-6 border-l-[0.25px] border-r-[0.25px] border-gray-600">
             <FeedCard/>
@@ -97,10 +111,10 @@ export default function Home() {
             <FeedCard/>          
           </div>
           <div className="col-span-3 p-5">
-            <div className="p-5 bg-slate-700 rounded-lg">
+            {!user && <div className="p-5 bg-slate-700 rounded-lg">
               <h1 className="my-2 text-2xl">New to Buzz?</h1>
               <GoogleLogin onSuccess={ handleLoginWithGoogle }/>
-            </div>
+            </div>}
           </div>
         </div>
     </div>
