@@ -31,3 +31,12 @@ body {
     text-wrap: balance;
   }
 }
+
+*:focus {
+  outline: none;
+}
+
+.BiImageAlt {
+  margin-right: 10px; /* Add some space between icon and button */
+  align-self: center; /* This ensures the icon centers itself within the flex container */
+}
