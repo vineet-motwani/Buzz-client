@@ -12,7 +12,7 @@ import { verifyUserGoogleTokenQuery } from "@/graphql/query/user";
 import { useCurrentUser } from "@/hooks/user";
 import { useQueryClient } from "@tanstack/react-query";
 import { debugPort } from "process";
-import { useGetAllTweets } from "@/hooks/tweet";
+import { useCreateTweet, useGetAllTweets } from "@/hooks/tweet";
 import { Tweet } from "@/gql/graphql";
 import axios from "axios";
 
@@ -60,39 +60,11 @@ export default function Home() {
 
   const { user } = useCurrentUser();
   const { tweets = []} = useGetAllTweets();
+  const { mutate } = useCreateTweet();
 
   const queryClient = useQueryClient();
 
   const [content, setContent] = React.useState<string>("");
-
-  // const handleInputChangeFile = useCallback((input: HTMLInputElement) => {
-  //   return async (event: Event) => {
-  //     event.preventDefault();
-  //     const file: File | null | undefined = input.files?.item(0);
-  //     if (!file) return;
-
-  //     const { getSignedURLForTweet } = await graphqlClient.request(
-  //       getSignedURLForTweetQuery,
-  //       {
-  //         imageName: file.name,
-  //         imageType: file.type,
-  //       }
-  //     );
-
-  //     if (getSignedURLForTweet) {
-  //       toast.loading("Uploading...", { id: "2" });
-  //       await axios.put(getSignedURLForTweet, file, {
-  //         headers: {
-  //           "Content-Type": file.type,
-  //         },
-  //       });
-  //       toast.success("Upload Completed", { id: "2" });
-  //       const url = new URL(getSignedURLForTweet);
-  //       const myFilePath = `${url.origin}${url.pathname}`;
-  //       setImageURL(myFilePath);
-  //     }
-  //   };
-  // }, []);
 
   const handleSelectImage = useCallback(()=>{
     const input = document.createElement("input");
@@ -104,6 +76,12 @@ export default function Home() {
 
     input.click();
   }, []);
+
+  const handleCreateTweet = useCallback(() => {
+    mutate({
+      content,
+    });
+  }, [content, mutate])
 
   const handleLoginWithGoogle = useCallback(
     async (cred: CredentialResponse)=>{
